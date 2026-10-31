@@ -1,47 +1,46 @@
+'use client'
+
+import { useMemo, useState } from 'react'
+import { ArrowRight, ChevronRight, Heart, Globe2, Menu, MessageCircle, Search, ShieldCheck, Sparkles, Star, Ticket, X } from 'lucide-react'
+
+const products = [
+  { id: 1, name: 'Pack Diamantes Neon', category: 'Moedas', price: 29.9, oldPrice: 39.9, image: '/lupita-mascot.png', tag: 'MAIS VENDIDO', color: 'from-fuchsia-950 to-black' },
+  { id: 2, name: 'Skin Lendária Eclipse', category: 'Skins', price: 89.9, oldPrice: 119.9, image: '/lupita-mascot.png', tag: 'OFERTA', color: 'from-pink-950 to-black' },
+  { id: 3, name: 'Passe de Batalha Elite', category: 'Passes', price: 54.9, image: '/lupita-mascot.png', tag: 'NOVIDADE', color: 'from-purple-950 to-black' },
+  { id: 4, name: 'Kit VIP Lupita', category: 'Kits', price: 149.9, image: '/lupita-mascot.png', tag: 'EXCLUSIVO', color: 'from-rose-950 to-black' },
+]
+
+const categories = ['Todos', 'Moedas', 'Skins', 'Passes', 'Kits']
+
 export default function Page() {
+  const [query, setQuery] = useState('')
+  const [activeCategory, setActiveCategory] = useState('Todos')
+  const [selected, setSelected] = useState<(typeof products)[number] | null>(null)
+  const filtered = useMemo(() => products.filter((p) => (activeCategory === 'Todos' || p.category === activeCategory) && p.name.toLowerCase().includes(query.toLowerCase())), [activeCategory, query])
+  const whatsapp = (product?: (typeof products)[number]) => {
+    const message = product ? `Olá! Vim pelo catálogo da LUPITA SHOPEE e quero fazer um pedido.\\n\\nProduto: ${product.name}\\nCategoria: ${product.category}\\nQuantidade: 1\\nMeu @ no jogo:\\nCupom utilizado: nenhum\\nValor do pedido: R$ ${product.price.toFixed(2).replace('.', ',')}\\nComprovante do pagamento: vou enviar na conversa.` : 'Olá! Vim pelo catálogo da LUPITA SHOPEE e quero falar com vocês.'
+    window.open(`https://wa.me/5500000000000?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer')
+  }
+
   return (
-    <main
-      style={{
-        colorScheme: 'light dark',
-        position: 'relative',
-        display: 'flex',
-        minHeight: '100vh',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'light-dark(#fff, #000)',
-        color: 'light-dark(#000, #fff)',
-      }}
-    >
-      <svg
-        aria-hidden="true"
-        style={{ width: 80, height: 80 }}
-        width={80}
-        height={80}
-        fill="none"
-        viewBox="0 0 20 20"
-        xmlns="http://www.w3.org/2000/svg"
-        stroke="currentColor"
-        strokeWidth="0.5"
-      >
-        <path
-          d="M14.2 14.2H17V6.9375C17 4.76288 15.2371 3 13.0625 3H5.8V5.8M14.2 14.2V7.79063L7.79062 14.2H14.2ZM14.2 14.2V17H6.9375C4.76288 17 3 15.2371 3 13.0625V5.8H5.8M5.8 5.8V12.2313L12.2313 5.8H5.8Z"
-          strokeLinejoin="round"
-        />
-      </svg>
-      <p
-        style={{
-          position: 'absolute',
-          left: '50%',
-          top: 'calc(50% + 56px)',
-          transform: 'translateX(-50%)',
-          whiteSpace: 'nowrap',
-          fontSize: '14px',
-          fontWeight: 500,
-          color: 'light-dark(#71717a, #a1a1aa)',
-        }}
-      >
-        Your v0 generation will show here.
-      </p>
+    <main className="min-h-screen overflow-hidden bg-[#09070b] text-white">
+      <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_75%_10%,rgba(236,72,153,.14),transparent_28%),radial-gradient(circle_at_10%_80%,rgba(168,85,247,.08),transparent_25%)]" />
+      <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-5 py-5 lg:px-10">
+        <a href="#inicio" className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-xl bg-pink-500 font-black shadow-[0_0_25px_rgba(236,72,153,.7)]">L</span><span className="text-lg font-black tracking-[.22em]">LUPITA <b className="text-pink-400">SHOPEE</b></span></a>
+        <nav className="hidden items-center gap-8 text-xs font-bold tracking-[.18em] text-zinc-400 md:flex"><a className="text-white" href="#inicio">INÍCIO</a><a href="#produtos">PRODUTOS</a><a href="#promocoes">PROMOÇÕES</a><a href="#novidades">NOVIDADES</a><a href="#contato">CONTATO</a></nav>
+        <button className="rounded-lg border border-white/10 p-2 md:hidden" aria-label="Abrir menu"><Menu /></button>
+      </header>
+      <section id="inicio" className="relative mx-auto grid max-w-7xl items-center gap-10 px-5 pb-20 pt-10 lg:grid-cols-[1.05fr_.95fr] lg:px-10 lg:pb-28 lg:pt-16">
+        <div className="relative z-10"><div className="mb-6 inline-flex items-center gap-2 rounded-full border border-pink-500/30 bg-pink-500/10 px-4 py-2 text-[10px] font-bold tracking-[.22em] text-pink-300"><Sparkles size={13} /> SEU UNIVERSO, DO SEU JEITO</div><h1 className="max-w-3xl text-5xl font-black leading-[.94] tracking-[-.05em] sm:text-7xl lg:text-8xl">JOGUE.<br /><span className="bg-gradient-to-r from-white via-pink-300 to-fuchsia-500 bg-clip-text text-transparent">DOMINE.</span><br />BRILHE.</h1><p className="mt-7 max-w-md text-base leading-7 text-zinc-400">Itens, skins e vantagens para elevar sua experiência no jogo. Compra rápida, atendimento humano e energia neon.</p><div className="mt-8 flex flex-wrap gap-3"><a href="#produtos" className="group inline-flex items-center gap-3 rounded-xl bg-pink-500 px-6 py-4 text-xs font-black tracking-widest text-white shadow-[0_0_30px_rgba(236,72,153,.35)] transition hover:bg-pink-400">VER PRODUTOS <ArrowRight className="transition group-hover:translate-x-1" size={16} /></a><button onClick={() => whatsapp()} className="inline-flex items-center gap-3 rounded-xl border border-white/15 px-6 py-4 text-xs font-black tracking-widest text-zinc-200 transition hover:border-pink-400 hover:text-pink-300"><MessageCircle size={16} /> FALE CONOSCO</button></div></div>
+        <div className="relative mx-auto w-full max-w-[470px]"><div className="absolute inset-8 rounded-full bg-pink-500/20 blur-[80px]" /><div className="relative overflow-hidden rounded-[2rem] border border-pink-400/30 bg-gradient-to-br from-pink-900/50 via-[#171019] to-black shadow-[0_0_70px_rgba(236,72,153,.2)]"><img src="/lupita-mascot.png" alt="Personagem principal da LUPITA SHOPEE" className="aspect-square w-full object-cover mix-blend-screen" /><div className="absolute bottom-5 left-5 right-5 flex items-center justify-between rounded-2xl border border-white/10 bg-black/55 p-4 backdrop-blur"><div><p className="text-[10px] font-bold tracking-[.2em] text-pink-300">LUPITA CORE</p><p className="mt-1 text-sm font-bold">Energia para vencer</p></div><div className="size-3 animate-pulse rounded-full bg-pink-400 shadow-[0_0_16px_#f472b6]" /></div></div></div>
+      </section>
+      <section className="relative mx-auto grid max-w-7xl grid-cols-2 gap-3 px-5 pb-20 sm:grid-cols-4 lg:px-10"><div className="rounded-2xl border border-white/10 bg-white/[.03] p-5"><ShieldCheck className="mb-4 text-pink-400" /><p className="font-bold">Compra segura</p><p className="mt-1 text-xs text-zinc-500">Atendimento de verdade</p></div><div className="rounded-2xl border border-white/10 bg-white/[.03] p-5"><Ticket className="mb-4 text-pink-400" /><p className="font-bold">Cupons ativos</p><p className="mt-1 text-xs text-zinc-500">Economize no checkout</p></div><div className="rounded-2xl border border-white/10 bg-white/[.03] p-5"><Star className="mb-4 text-pink-400" /><p className="font-bold">Qualidade premium</p><p className="mt-1 text-xs text-zinc-500">Itens selecionados</p></div><div className="rounded-2xl border border-white/10 bg-white/[.03] p-5"><MessageCircle className="mb-4 text-pink-400" /><p className="font-bold">Pedido no WhatsApp</p><p className="mt-1 text-xs text-zinc-500">Rápido e sem burocracia</p></div></section>
+      <section id="produtos" className="relative mx-auto max-w-7xl px-5 pb-24 lg:px-10"><div className="mb-8 flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><p className="text-xs font-bold tracking-[.25em] text-pink-400">CATÁLOGO LUPITA</p><h2 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">Escolha seu próximo <span className="text-pink-400">upgrade.</span></h2></div><div className="flex w-full max-w-sm items-center gap-2 rounded-xl border border-white/10 bg-white/[.04] px-4 py-3"><Search size={17} className="text-zinc-500" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar produtos..." className="w-full bg-transparent text-sm outline-none placeholder:text-zinc-600" /></div></div><div className="mb-8 flex gap-2 overflow-auto pb-1">{categories.map((category) => <button key={category} onClick={() => setActiveCategory(category)} className={`whitespace-nowrap rounded-full px-4 py-2 text-xs font-bold transition ${activeCategory === category ? 'bg-pink-500 text-white shadow-[0_0_20px_rgba(236,72,153,.3)]' : 'border border-white/10 text-zinc-400 hover:border-pink-400/50'}`}>{category}</button>)}</div><div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{filtered.map((product) => <article key={product.id} className="group overflow-hidden rounded-2xl border border-white/10 bg-[#120e14] transition hover:-translate-y-1 hover:border-pink-500/50 hover:shadow-[0_15px_40px_rgba(236,72,153,.12)]"><button onClick={() => setSelected(product)} className={`relative block aspect-[.9] w-full overflow-hidden bg-gradient-to-br ${product.color}`}><img src={product.image} alt={product.name} className="h-full w-full object-cover opacity-80 transition duration-500 group-hover:scale-105 group-hover:opacity-100" /><span className="absolute left-3 top-3 rounded-full border border-pink-300/30 bg-black/60 px-3 py-1 text-[9px] font-black tracking-widest text-pink-300">{product.tag}</span><span className="absolute right-3 top-3 rounded-full bg-black/50 p-2 text-zinc-300"><Heart size={15} /></span></button><div className="p-4"><p className="text-[10px] font-bold tracking-widest text-pink-400">{product.category.toUpperCase()}</p><h3 className="mt-2 font-bold">{product.name}</h3><div className="mt-4 flex items-end justify-between"><div><p className="text-xs text-zinc-500 line-through">{product.oldPrice ? `R$ ${product.oldPrice.toFixed(2).replace('.', ',')}` : ''}</p><p className="text-xl font-black">R$ {product.price.toFixed(2).replace('.', ',')}</p></div><button onClick={() => whatsapp(product)} className="rounded-lg bg-pink-500 p-3 text-white transition hover:bg-pink-400" aria-label={`Pedir ${product.name} pelo WhatsApp`}><MessageCircle size={17} /></button></div></div></article>)}</div></section>
+      <section id="promocoes" className="mx-5 mb-20 overflow-hidden rounded-3xl border border-pink-500/30 bg-gradient-to-r from-pink-950/70 via-[#1a0d1b] to-[#100b12] lg:mx-auto lg:max-w-7xl"><div className="grid items-center gap-8 p-8 sm:p-12 lg:grid-cols-[1fr_auto]"><div><p className="text-xs font-black tracking-[.25em] text-pink-300">CUPOM DE BOAS-VINDAS</p><h2 className="mt-3 text-3xl font-black sm:text-5xl">Use <span className="text-pink-400">LUPITA10</span></h2><p className="mt-3 max-w-lg text-zinc-400">Ganhe 10% OFF no seu primeiro pedido. Válido para produtos selecionados enquanto durar a campanha.</p></div><div className="flex items-center gap-3 rounded-2xl border border-dashed border-pink-400/50 bg-black/30 p-4"><Ticket className="text-pink-400" /><span className="font-mono font-bold tracking-widest">LUPITA10</span></div></div></section>
+      <section id="novidades" className="mx-auto max-w-7xl px-5 pb-20 lg:px-10"><p className="text-xs font-bold tracking-[.25em] text-pink-400">DROP DA SEMANA</p><div className="mt-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center"><h2 className="text-3xl font-black">Novidades no radar</h2><a href="#produtos" className="flex items-center gap-2 text-sm font-bold text-pink-400">Ver tudo <ChevronRight size={16} /></a></div></section>
+      <footer id="contato" className="border-t border-white/10 px-5 py-10 lg:px-10"><div className="mx-auto flex max-w-7xl flex-col justify-between gap-6 sm:flex-row sm:items-center"><div><p className="font-black tracking-[.2em]">LUPITA <span className="text-pink-400">SHOPEE</span></p><p className="mt-2 text-xs text-zinc-500">Seu universo gamer, elevado.</p></div><div className="flex items-center gap-3"><a href="#" aria-label="Instagram" className="rounded-full border border-white/10 p-3 text-zinc-400 hover:text-pink-400"><Globe2 size={17} /></a><button onClick={() => whatsapp()} aria-label="WhatsApp" className="rounded-full border border-white/10 p-3 text-zinc-400 hover:text-pink-400"><MessageCircle size={17} /></button></div></div></footer>
+      <button onClick={() => whatsapp()} className="fixed bottom-5 right-5 z-20 rounded-full bg-[#25d366] p-4 text-white shadow-[0_0_25px_rgba(37,211,102,.45)] transition hover:scale-105" aria-label="Falar no WhatsApp"><MessageCircle /></button>
+      {selected && <div className="fixed inset-0 z-30 grid place-items-center bg-black/80 p-5 backdrop-blur-sm" onClick={() => setSelected(null)}><div className="w-full max-w-2xl overflow-hidden rounded-3xl border border-pink-400/30 bg-[#120e14]" onClick={(e) => e.stopPropagation()}><div className="flex justify-end p-4"><button onClick={() => setSelected(null)} aria-label="Fechar"><X /></button></div><div className="grid gap-6 p-6 pt-0 sm:grid-cols-2"><img src={selected.image} alt={selected.name} className="aspect-square w-full rounded-2xl object-cover" /><div className="flex flex-col justify-center"><p className="text-xs font-bold tracking-widest text-pink-400">{selected.category.toUpperCase()}</p><h2 className="mt-2 text-3xl font-black">{selected.name}</h2><p className="mt-4 text-sm leading-6 text-zinc-400">Item premium selecionado pela curadoria LUPITA SHOPEE. Consulte disponibilidade e receba atendimento personalizado pelo WhatsApp.</p><p className="mt-6 text-3xl font-black">R$ {selected.price.toFixed(2).replace('.', ',')}</p><button onClick={() => whatsapp(selected)} className="mt-6 flex items-center justify-center gap-2 rounded-xl bg-pink-500 px-5 py-4 text-xs font-black tracking-widest shadow-[0_0_25px_rgba(236,72,153,.3)]"><MessageCircle size={17} /> PEDIR PELO WHATSAPP</button></div></div></div></div>}
     </main>
   )
 }
