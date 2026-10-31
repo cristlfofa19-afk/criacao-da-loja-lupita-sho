@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
+import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/env"
 
-const baseUrl = process.env.SUPABASE_URL
-const publicKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY
+const baseUrl = supabaseUrl
+const publicKey = supabaseAnonKey
 
 export async function GET() {
   if (!baseUrl || !publicKey) return NextResponse.json({ error: "Catálogo indisponível" }, { status: 500 })
