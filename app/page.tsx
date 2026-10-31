@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight, ChevronRight, Menu, MessageCircle, Search, ShoppingBag, X } from 'lucide-react'
@@ -14,9 +14,11 @@ const products = [
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [search, setSearch] = useState('')
+  const [catalog, setCatalog] = useState(products)
+  useEffect(() => { fetch('/api/items').then(r => r.ok ? r.json() : []).then(items => { if (items.length) setCatalog(items.map((item: { id: string; name: string; price: number; description: string; media_url: string | null }) => ({ ...item, image: item.media_url || '/lupita-character.jpg', video: Boolean(item.media_url?.match(/\.mp4|\.webm|\.mov/i)) }))) }).catch(() => {}) }, [])
   const [selected, setSelected] = useState<(typeof products)[number] | null>(null)
   const [cart, setCart] = useState<(typeof products)[number][]>([])
-  const filtered = products.filter((product) => product.name.toLowerCase().includes(search.toLowerCase()))
+  const filtered = catalog.filter((product) => product.name.toLowerCase().includes(search.toLowerCase()))
   const addToCart = (product: (typeof products)[number]) => setCart((items) => [...items, product])
   const checkoutMessage = cart.length ? `Olá! Quero finalizar meu pedido: ${cart.map((item) => item.name).join(', ')}.` : 'Olá! Vim pelo catálogo da LUPITA SHOPEE.'
   const openWhatsApp = (message = checkoutMessage) => window.open(`https://wa.me/${whatsapp}?text=${encodeURIComponent(message)}`, '_blank')
