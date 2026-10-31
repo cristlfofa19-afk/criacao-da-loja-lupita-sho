@@ -1,13 +1,14 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 import { supabaseCookieOptions } from "@/lib/supabase/cookie-options"
+import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/env"
 
 export async function proxy(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith("/admin/login")) return NextResponse.next()
 
   let response = NextResponse.next({ request })
 
-  const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookieOptions: supabaseCookieOptions,
     cookies: {
       getAll() {

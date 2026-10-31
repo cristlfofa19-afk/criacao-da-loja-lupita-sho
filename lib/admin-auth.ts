@@ -1,14 +1,15 @@
 import { createClient } from "@/lib/supabase/server"
+import { supabaseServiceRoleKey, supabaseUrl } from "@/lib/supabase/env"
 
 export type AdminUser = { id: string; email: string; name: string }
 
 export async function isAuthorizedAdmin(userId: string) {
   const response = await fetch(
-    `${process.env.SUPABASE_URL}/rest/v1/admin_users?select=user_id&user_id=eq.${encodeURIComponent(userId)}`,
+    `${supabaseUrl}/rest/v1/admin_users?select=user_id&user_id=eq.${encodeURIComponent(userId)}`,
     {
       headers: {
-        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        apikey: supabaseServiceRoleKey,
+        Authorization: `Bearer ${supabaseServiceRoleKey}`,
       },
       cache: "no-store",
     },

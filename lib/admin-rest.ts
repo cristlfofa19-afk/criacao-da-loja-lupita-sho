@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { supabaseServiceRoleKey, supabaseUrl } from "@/lib/supabase/env"
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -24,8 +25,8 @@ export async function adminRest<T = unknown>(
   path: string,
   options: { method?: "GET" | "POST" | "PATCH" | "DELETE"; body?: unknown; prefer?: string } = {},
 ): Promise<RestResult<T>> {
-  const baseUrl = process.env.SUPABASE_URL
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const baseUrl = supabaseUrl
+  const serviceKey = supabaseServiceRoleKey
   if (!baseUrl || !serviceKey) return { ok: false, status: 500, error: "Conexão com o banco não configurada." }
 
   const method = options.method ?? "GET"
