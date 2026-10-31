@@ -1,15 +1,11 @@
 import { NextResponse } from "next/server"
-import { headers } from "next/headers"
-import { auth } from "@/lib/auth"
+import { getAdminUser } from "@/lib/admin-auth"
 
 const baseUrl = process.env.SUPABASE_URL
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 async function requireAdmin() {
-  const session = await auth.api.getSession({ headers: await headers() })
-  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase()
-  const sessionEmail = session?.user?.email?.trim().toLowerCase()
-  return Boolean(session?.user && adminEmail && sessionEmail === adminEmail)
+  return Boolean(await getAdminUser())
 }
 
 export async function GET() {
