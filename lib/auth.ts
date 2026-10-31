@@ -1,7 +1,10 @@
 import { betterAuth } from "better-auth"
 import { Pool } from "pg"
 
-const baseURL = process.env.BETTER_AUTH_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) || process.env.V0_RUNTIME_URL
+const configuredBaseURL = process.env.BETTER_AUTH_URL
+const baseURL = configuredBaseURL?.startsWith("http")
+  ? configuredBaseURL
+  : (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) || process.env.V0_RUNTIME_URL
 
 const databaseUrl =
   process.env.POSTGRES_URL_NON_POOLING ||
