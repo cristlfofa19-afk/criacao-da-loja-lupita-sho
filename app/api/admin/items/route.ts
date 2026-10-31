@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   if (!(await requireAdmin())) return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
   const body = await request.json()
   if (!body.name?.trim()) return NextResponse.json({ error: "Informe o nome do item" }, { status: 400 })
-  const response = await fetch(`${baseUrl}/rest/v1/store_items`, { method: "POST", headers: { apikey: serviceKey!, Authorization: `Bearer ${serviceKey}`, "Content-Type": "application/json", Prefer: "return=representation" }, body: JSON.stringify({ name: body.name.trim(), price: Number(body.price) || 0, media_url: body.media_url || null, description: body.description || "" }) })
+  const response = await fetch(`${baseUrl}/rest/v1/store_items`, { method: "POST", headers: { apikey: serviceKey!, Authorization: `Bearer ${serviceKey}`, "Content-Type": "application/json", Prefer: "return=representation" }, body: JSON.stringify({ name: body.name.trim(), price: Number(body.price) || 0, media_url: body.media_url || null, description: body.description || "", category_id: body.category_id || null }) })
   return NextResponse.json((await response.json())[0], { status: response.status })
 }
 
