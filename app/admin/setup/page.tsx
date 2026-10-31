@@ -1,18 +1,14 @@
 "use client"
 
-import { FormEvent, useEffect, useState } from "react"
+import { FormEvent, useState } from "react"
 import { useRouter } from "next/navigation"
 import { UserPlus, ShieldCheck } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
 
 export default function AdminSetupPage() {
   const router = useRouter()
-
-  useEffect(() => {
-    router.replace('/admin/login')
-  }, [router])
   const [name, setName] = useState("Lupita")
-  const [email, setEmail] = useState("")
+  const [email, setEmail] = useState("admin@lupita.com")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
