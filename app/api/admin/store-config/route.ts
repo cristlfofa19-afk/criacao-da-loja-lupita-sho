@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
-import { headers } from "next/headers"
-import { auth } from "@/lib/auth"
+import { getAdminUser } from "@/lib/admin-auth"
 
 const baseUrl = process.env.SUPABASE_URL!
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -8,8 +7,7 @@ const tables = ["store_categories", "store_coupons", "store_cashback_rules", "st
 type Table = (typeof tables)[number]
 
 async function admin() {
-  const session = await auth.api.getSession({ headers: await headers() })
-  return Boolean(session?.user)
+  return Boolean(await getAdminUser())
 }
 function validTable(value: string): value is Table { return tables.includes(value as Table) }
 const headersFor = (json = false) => ({ apikey: serviceKey, Authorization: `Bearer ${serviceKey}`, ...(json ? { "Content-Type": "application/json", Prefer: "return=representation" } : {}) })

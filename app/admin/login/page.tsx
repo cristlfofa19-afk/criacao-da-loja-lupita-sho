@@ -3,7 +3,6 @@
 import { FormEvent, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { LockKeyhole, Sparkles } from "lucide-react"
-import { authClient } from "@/lib/auth-client"
 
 export default function AdminLoginPage() {
   const router = useRouter()
@@ -23,12 +22,20 @@ export default function AdminLoginPage() {
     setLoading(true)
     setError("")
     try {
-      const result = await authClient.signIn.email({ email, password })
-      if (result.error) setError("E-mail ou senha inválidos.")
-      else { router.push("/admin"); router.refresh() }
+      const response = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        setError(result.error || "E-mail ou senha inválidos.")
+        setLoading(false)
+        return
+      }
+      window.location.replace("/admin")
     } catch {
       setError("Não foi possível conectar ao acesso agora. Tente novamente em instantes.")
-    } finally {
       setLoading(false)
     }
   }

@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { authClient } from '@/lib/auth-client'
 import PaymentSettings, { defaultPaymentConfig } from '@/components/admin/payment-settings'
 
 type Item = { id: string; name: string; price: number; media_url: string | null; description: string; category?: string; category_id?: string | null; subcategory?: string | null; active: boolean; published: boolean }
@@ -77,7 +76,7 @@ export default function AdminDashboard({ name }: { name: string }) {
   async function saveAnnouncement(event: React.FormEvent) { event.preventDefault(); try { await api('/api/admin/store-config', { method: 'POST', body: JSON.stringify({ table: 'store_announcements', ...announcement }) }); setAnnouncement({ title: '', body: '', kind: 'novidade', image_url: '' }); setMessage('Publicação salva.'); await load() } catch (error) { setMessage(error instanceof Error ? error.message : 'Erro ao salvar publicação') } }
   async function saveSettings(event: React.FormEvent) { event.preventDefault(); try { await api('/api/admin/store-config', { method: 'POST', body: JSON.stringify({ table: 'store_settings', id: true, ...settings }) }); setMessage('Textos, WhatsApp e foto salvos.'); await load() } catch (error) { setMessage(error instanceof Error ? error.message : 'Erro ao salvar aparência') } }
   async function savePayments(event: React.FormEvent) { event.preventDefault(); try { await api('/api/admin/store-config', { method: 'POST', body: JSON.stringify({ table: 'store_payment_settings', id: true, ...payments }) }); setMessage('Formas de pagamento e juros salvos.'); await load() } catch (error) { setMessage(error instanceof Error ? error.message : 'Erro ao salvar pagamentos') } }
-  async function logout() { await authClient.signOut(); window.location.href = '/admin/login' }
+  async function logout() { await fetch('/api/admin/logout', { method: 'POST' }); window.location.href = '/admin/login' }
 
   const field = (value: string | number, onChange: (value: string) => void, placeholder: string, type = 'text') => <input className="admin-input" required placeholder={placeholder} type={type} value={value} onChange={(event) => onChange(event.target.value)} />
   const productSelect = (value: string, onChange: (value: string) => void) => <select className="admin-input" value={value} onChange={(event) => onChange(event.target.value)}><option value="">Todos os produtos</option>{items.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select>
