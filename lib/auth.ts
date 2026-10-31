@@ -17,7 +17,7 @@ export const auth = betterAuth({
     ssl: { rejectUnauthorized: false },
   }),
   baseURL,
-  secret: process.env.BETTER_AUTH_SECRET,
+  secret: process.env.BETTER_AUTH_SECRET || process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_JWT_SECRET,
   trustedOrigins: [
     "http://localhost:3000",
     ...[process.env.V0_RUNTIME_URL, process.env.V0_DEV_APP_URL, process.env.V0_BUILD_URL, process.env.V0_SANDBOX_URL].filter(Boolean) as string[],

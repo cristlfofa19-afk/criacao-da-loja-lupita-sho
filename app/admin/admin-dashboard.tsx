@@ -1,54 +1,81 @@
-"use client"
+'use client'
 
-import { useEffect, useState } from "react"
-import { authClient } from "@/lib/auth-client"
+import { useEffect, useState } from 'react'
+import { authClient } from '@/lib/auth-client'
 
-type Item = { id: string; name: string; price: number; media_url: string | null; description: string }
-type Form = { name: string; price: string; media_url: string; description: string }
-const sections = ["Produtos", "Categorias", "Promoções e cupons", "Novidades", "Pagamentos", "Aparência e textos"]
-const emptyForm: Form = { name: "", price: "", media_url: "", description: "" }
+type Item = { id: string; name: string; price: number; media_url: string | null; description: string; category?: string }
+type Category = { id: string; name: string; subcategories: string[] }
+type Coupon = { id: string; code: string; discount_type: 'percent' | 'fixed'; value: number; category: string; product_id: string | null; active: boolean }
+type Rule = { id: string; percent: number; category: string; product_id: string | null; active: boolean }
+type Announcement = { id: string; title: string; body: string; kind: string; active: boolean }
+type Settings = { store_name: string; whatsapp: string; logo_url: string; hero_title: string; hero_text: string }
+type Payments = { pix_enabled: boolean; credit_enabled: boolean; debit_enabled: boolean; whatsapp_enabled: boolean; card_interest: number; max_installments: number }
+
+const sections = ['Produtos', 'Categorias', 'Promoções e cupons', 'Cashback', 'Novidades', 'Pagamentos', 'Aparência e textos']
+const emptyItem = { name: '', price: '', media_url: '', description: '', category: '' }
+const emptySettings: Settings = { store_name: '', whatsapp: '', logo_url: '', hero_title: '', hero_text: '' }
+const emptyPayments: Payments = { pix_enabled: true, credit_enabled: true, debit_enabled: true, whatsapp_enabled: true, card_interest: 0, max_installments: 1 }
 
 export default function AdminDashboard({ name }: { name: string }) {
-  const [active, setActive] = useState("Produtos")
+  const [active, setActive] = useState('Produtos')
   const [items, setItems] = useState<Item[]>([])
-  const [form, setForm] = useState<Form>(emptyForm)
+  const [categories, setCategories] = useState<Category[]>([])
+  const [coupons, setCoupons] = useState<Coupon[]>([])
+  const [rules, setRules] = useState<Rule[]>([])
+  const [announcements, setAnnouncements] = useState<Announcement[]>([])
+  const [settings, setSettings] = useState(emptySettings)
+  const [payments, setPayments] = useState(emptyPayments)
+  const [form, setForm] = useState(emptyItem)
+  const [coupon, setCoupon] = useState({ code: '', discount_type: 'percent', value: '', category: 'Todas', product_id: '' })
+  const [rule, setRule] = useState({ percent: '', category: 'Todas', product_id: '' })
+  const [category, setCategory] = useState({ name: '', subcategories: '' })
+  const [announcement, setAnnouncement] = useState({ title: '', body: '', kind: 'novidade', image_url: '' })
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [message, setMessage] = useState("")
+  const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
 
-  async function loadItems() {
+  const api = async (path: string, options?: RequestInit) => {
+    const response = await fetch(path, { ...options, headers: { 'Content-Type': 'application/json', ...(options?.headers || {}) } })
+    const data = await response.json()
+    if (!response.ok) throw new Error(data.error || 'Não foi possível concluir')
+    return data
+  }
+
+  async function load() {
     setLoading(true)
     try {
-      const response = await fetch("/api/admin/items", { cache: "no-store" })
-      if (!response.ok) throw new Error()
-      setItems(await response.json())
-    } catch { setMessage("Não foi possível carregar os produtos.") } finally { setLoading(false) }
+      const [products, cats, couponsData, rulesData, news, storeSettings, paymentSettings] = await Promise.all([
+        api('/api/admin/items'), api('/api/admin/store-config?table=store_categories'), api('/api/admin/store-config?table=store_coupons'),
+        api('/api/admin/store-config?table=store_cashback_rules'), api('/api/admin/store-config?table=store_announcements'),
+        api('/api/admin/store-config?table=store_settings'), api('/api/admin/store-config?table=store_payment_settings'),
+      ])
+      setItems(products); setCategories(cats); setCoupons(couponsData); setRules(rulesData); setAnnouncements(news)
+      if (storeSettings[0]) setSettings({ ...emptySettings, ...storeSettings[0] })
+      if (paymentSettings[0]) setPayments({ ...emptyPayments, ...paymentSettings[0] })
+    } catch (error) { setMessage(error instanceof Error ? error.message : 'Erro ao carregar o painel') } finally { setLoading(false) }
   }
-  useEffect(() => { void loadItems() }, [])
 
-  function openSection(section: string) { setActive(section); setMessage("") }
-  function editItem(item: Item) { setActive("Produtos"); setEditingId(item.id); setForm({ name: item.name, price: String(item.price), media_url: item.media_url ?? "", description: item.description }); window.scrollTo({ top: 0, behavior: "smooth" }) }
-  function clearForm() { setEditingId(null); setForm(emptyForm) }
+  useEffect(() => { void load() }, [])
+  async function saveItem(event: React.FormEvent) { event.preventDefault(); try { await api('/api/admin/items', { method: editingId ? 'PATCH' : 'POST', body: JSON.stringify({ ...form, id: editingId }) }); setMessage('Produto salvo.'); setForm(emptyItem); setEditingId(null); await load() } catch (error) { setMessage(error instanceof Error ? error.message : 'Erro ao salvar produto') } }
+  async function saveCategory(event: React.FormEvent) { event.preventDefault(); try { await api('/api/admin/store-config', { method: 'POST', body: JSON.stringify({ table: 'store_categories', name: category.name.trim(), subcategories: category.subcategories.split(',').map((value) => value.trim()).filter(Boolean) }) }); setCategory({ name: '', subcategories: '' }); setMessage('Categoria salva.'); await load() } catch (error) { setMessage(error instanceof Error ? error.message : 'Erro ao salvar categoria') } }
+  async function saveCoupon(event: React.FormEvent) { event.preventDefault(); try { await api('/api/admin/store-config', { method: 'POST', body: JSON.stringify({ table: 'store_coupons', code: coupon.code.trim().toUpperCase(), discount_type: coupon.discount_type, value: Number(coupon.value), category: coupon.category, product_id: coupon.product_id || null }) }); setCoupon({ code: '', discount_type: 'percent', value: '', category: 'Todas', product_id: '' }); setMessage('Cupom automático salvo.'); await load() } catch (error) { setMessage(error instanceof Error ? error.message : 'Erro ao salvar cupom') } }
+  async function saveRule(event: React.FormEvent) { event.preventDefault(); try { await api('/api/admin/store-config', { method: 'POST', body: JSON.stringify({ table: 'store_cashback_rules', percent: Number(rule.percent), category: rule.category, product_id: rule.product_id || null }) }); setRule({ percent: '', category: 'Todas', product_id: '' }); setMessage('Cashback automático salvo.'); await load() } catch (error) { setMessage(error instanceof Error ? error.message : 'Erro ao salvar cashback') } }
+  async function saveAnnouncement(event: React.FormEvent) { event.preventDefault(); try { await api('/api/admin/store-config', { method: 'POST', body: JSON.stringify({ table: 'store_announcements', ...announcement }) }); setAnnouncement({ title: '', body: '', kind: 'novidade', image_url: '' }); setMessage('Publicação salva.'); await load() } catch (error) { setMessage(error instanceof Error ? error.message : 'Erro ao salvar publicação') } }
+  async function saveSettings(event: React.FormEvent) { event.preventDefault(); try { await api('/api/admin/store-config', { method: 'POST', body: JSON.stringify({ table: 'store_settings', id: true, ...settings }) }); setMessage('Textos, WhatsApp e foto salvos.'); await load() } catch (error) { setMessage(error instanceof Error ? error.message : 'Erro ao salvar aparência') } }
+  async function savePayments(event: React.FormEvent) { event.preventDefault(); try { await api('/api/admin/store-config', { method: 'POST', body: JSON.stringify({ table: 'store_payment_settings', id: true, ...payments }) }); setMessage('Formas de pagamento e juros salvos.'); await load() } catch (error) { setMessage(error instanceof Error ? error.message : 'Erro ao salvar pagamentos') } }
+  async function logout() { await authClient.signOut(); window.location.href = '/admin/login' }
 
-  async function saveItem(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setSaving(true); setMessage("")
-    try {
-      const response = await fetch("/api/admin/items", { method: editingId ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, id: editingId }) })
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok) throw new Error(data.error || "Não foi possível salvar.")
-      setMessage(editingId ? "Produto atualizado com sucesso." : "Produto cadastrado com sucesso.")
-      clearForm(); await loadItems()
-    } catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível salvar.") } finally { setSaving(false) }
-  }
-  async function logout() { await authClient.signOut(); window.location.href = "/admin/login" }
+  const field = (value: string | number, onChange: (value: string) => void, placeholder: string, type = 'text') => <input className="admin-input" required placeholder={placeholder} type={type} value={value} onChange={(event) => onChange(event.target.value)} />
+  const productSelect = (value: string, onChange: (value: string) => void) => <select className="admin-input" value={value} onChange={(event) => onChange(event.target.value)}><option value="">Todos os produtos</option>{items.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select>
+  const FormShell = ({ children, title }: { children: React.ReactNode; title: string }) => <form onSubmit={(event) => event.preventDefault()} className="grid gap-3 rounded-xl border border-white/10 bg-black/20 p-5"><h3 className="font-bold">{title}</h3>{children}</form>
 
-  return <main className="min-h-screen bg-[#07050b] p-4 text-white sm:p-8"><div className="mx-auto max-w-6xl">
-    <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-6"><div><p className="text-xs font-bold uppercase tracking-[.3em] text-fuchsia-300">LUPITA SHOPEE</p><h1 className="mt-2 text-3xl font-black">Painel administrativo</h1><p className="mt-2 text-sm text-white/60">Olá, {name}. Escolha uma área para administrar sua loja.</p></div><button onClick={logout} className="admin-secondary">Sair</button></header>
-    <nav aria-label="Seções administrativas" className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">{sections.map(section => <button key={section} type="button" onClick={() => openSection(section)} className={active === section ? "admin-nav active" : "admin-nav"}>{section}<span>›</span></button>)}</nav>
-    <section className="mt-6 rounded-2xl border border-fuchsia-400/20 bg-white/[.04] p-5 sm:p-7"><p className="text-xs font-bold uppercase tracking-[.25em] text-fuchsia-300">Área aberta</p><h2 className="mt-2 text-2xl font-black">{active}</h2>
-      {active === "Produtos" ? <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(280px,1fr)_minmax(320px,1.2fr)]"><form onSubmit={saveItem} className="grid gap-3 rounded-xl border border-white/10 bg-black/20 p-5"><h3 className="font-bold">{editingId ? "Editar produto" : "Cadastrar produto"}</h3><input required className="admin-input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Nome do produto" /><input required className="admin-input" type="number" min="0" step="0.01" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} placeholder="Preço" /><input className="admin-input" value={form.media_url} onChange={e => setForm({ ...form, media_url: e.target.value })} placeholder="Link da imagem ou vídeo" /><textarea className="admin-input min-h-28" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Descrição" /><div className="flex flex-wrap gap-3"><button className="admin-primary" disabled={saving}>{saving ? "Salvando..." : editingId ? "Salvar alterações" : "Cadastrar produto"}</button>{editingId && <button className="admin-secondary" type="button" onClick={clearForm}>Cancelar</button>}</div></form><div><h3 className="font-bold">Produtos cadastrados</h3>{loading ? <p className="mt-4 text-sm text-white/60">Carregando...</p> : items.length === 0 ? <p className="mt-4 rounded-xl border border-dashed border-white/20 p-5 text-sm text-white/60">Nenhum produto cadastrado.</p> : <div className="mt-3 grid gap-3">{items.map(item => <article key={item.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 p-4"><div><strong>{item.name}</strong><p className="text-sm text-fuchsia-200">R$ {Number(item.price).toFixed(2).replace(".", ",")}</p></div><button className="admin-secondary" type="button" onClick={() => editItem(item)}>Editar</button></article>)}</div>}</div></div> : <div className="mt-6 rounded-xl border border-dashed border-white/20 p-6"><h3 className="font-bold">Configurar {active.toLowerCase()}</h3><p className="mt-2 text-sm text-white/60">Os controles desta área estão prontos para você configurar. Selecione outra seção ou volte para Produtos.</p><button type="button" className="admin-primary mt-5" onClick={() => openSection("Produtos")}>Voltar para produtos</button></div>}
-      {message && <p role="status" className="mt-4 text-sm text-fuchsia-200">{message}</p>}
-    </section>
-  </div></main>
+  return <main className="min-h-screen bg-[#07050b] p-4 text-white sm:p-8"><div className="mx-auto max-w-6xl"><header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-6"><div><p className="text-xs font-bold uppercase tracking-[.3em] text-fuchsia-300">LUPITA SHOPEE</p><h1 className="mt-2 text-3xl font-black">Painel administrativo</h1><p className="mt-2 text-sm text-white/60">Olá, {name}. Todas as alterações são salvas no Supabase.</p></div><button onClick={logout} className="admin-secondary">Sair</button></header><nav aria-label="Seções administrativas" className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">{sections.map((section) => <button key={section} type="button" onClick={() => { setActive(section); setMessage('') }} className={active === section ? 'admin-nav active' : 'admin-nav'}>{section}<span>›</span></button>)}</nav><section className="mt-6 rounded-2xl border border-fuchsia-400/20 bg-white/[.04] p-5 sm:p-7"><h2 className="text-2xl font-black">{active}</h2>{loading && <p className="mt-4 text-sm text-white/60">Carregando dados...</p>}
+  {active === 'Produtos' && <div className="mt-6 grid gap-6 lg:grid-cols-2"><form onSubmit={saveItem} className="grid gap-3 rounded-xl border border-white/10 bg-black/20 p-5"><h3 className="font-bold">{editingId ? 'Editar produto' : 'Adicionar produto'}</h3>{field(form.name, (value) => setForm({ ...form, name: value }), 'Nome do produto')}{field(form.price, (value) => setForm({ ...form, price: value }), 'Preço', 'number')}{field(form.media_url, (value) => setForm({ ...form, media_url: value }), 'Link da foto')}{field(form.category, (value) => setForm({ ...form, category: value }), 'Categoria')}<textarea className="admin-input min-h-24" placeholder="Descrição" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} /><button className="admin-primary">Salvar produto</button></form><div className="grid gap-3">{items.map((item) => <article className="flex items-center justify-between rounded-xl border border-white/10 p-4" key={item.id}><div><strong>{item.name}</strong><p className="text-fuchsia-200">R$ {Number(item.price).toFixed(2).replace('.', ',')}</p></div><button className="admin-secondary" onClick={() => { setEditingId(item.id); setForm({ name: item.name, price: String(item.price), media_url: item.media_url || '', description: item.description, category: item.category || '' }) }}>Editar</button></article>)}</div></div>}
+  {active === 'Categorias' && <div className="mt-6 grid gap-6 lg:grid-cols-2"><form onSubmit={saveCategory} className="grid gap-3 rounded-xl border border-white/10 bg-black/20 p-5"><h3 className="font-bold">Criar categoria e subcategorias</h3>{field(category.name, (value) => setCategory({ ...category, name: value }), 'Nome da categoria')}<textarea className="admin-input min-h-24" placeholder="Subcategorias separadas por vírgula" value={category.subcategories} onChange={(event) => setCategory({ ...category, subcategories: event.target.value })} /><button className="admin-primary">Salvar categoria</button></form><div className="grid gap-3">{categories.map((item) => <article className="rounded-xl border border-white/10 p-4" key={item.id}><strong>{item.name}</strong><p className="text-sm text-white/60">{item.subcategories.join(' · ') || 'Sem subcategorias'}</p></article>)}</div></div>}
+  {active === 'Promoções e cupons' && <div className="mt-6 grid gap-6 lg:grid-cols-2"><form onSubmit={saveCoupon} className="grid gap-3 rounded-xl border border-white/10 bg-black/20 p-5"><h3 className="font-bold">Criar cupom automático</h3>{field(coupon.code, (value) => setCoupon({ ...coupon, code: value }), 'Código')}{field(coupon.value, (value) => setCoupon({ ...coupon, value }), 'Desconto', 'number')}<select className="admin-input" value={coupon.discount_type} onChange={(event) => setCoupon({ ...coupon, discount_type: event.target.value })}><option value="percent">Percentual (%)</option><option value="fixed">Valor fixo (R$)</option></select>{field(coupon.category, (value) => setCoupon({ ...coupon, category: value }), 'Categoria ou Todas')}{productSelect(coupon.product_id, (value) => setCoupon({ ...coupon, product_id: value }))}<button className="admin-primary">Salvar cupom</button></form><div className="grid gap-3">{coupons.map((item) => <article key={item.id} className="rounded-xl border border-white/10 p-4"><strong>{item.code}</strong><p className="text-sm text-white/60">{item.discount_type === 'percent' ? `${item.value}%` : `R$ ${item.value}`} · {item.category}</p></article>)}</div></div>}
+  {active === 'Cashback' && <div className="mt-6 grid gap-6 lg:grid-cols-2"><form onSubmit={saveRule} className="grid gap-3 rounded-xl border border-white/10 bg-black/20 p-5"><h3 className="font-bold">Cashback automático</h3>{field(rule.percent, (value) => setRule({ ...rule, percent: value }), 'Percentual', 'number')}{field(rule.category, (value) => setRule({ ...rule, category: value }), 'Categoria ou Todas')}{productSelect(rule.product_id, (value) => setRule({ ...rule, product_id: value }))}<button className="admin-primary">Salvar regra</button></form><div className="grid gap-3">{rules.map((item) => <article key={item.id} className="rounded-xl border border-white/10 p-4">{item.percent}% de cashback · {item.category}</article>)}</div></div>}
+  {active === 'Novidades' && <div className="mt-6 grid gap-6 lg:grid-cols-2"><form onSubmit={saveAnnouncement} className="grid gap-3 rounded-xl border border-white/10 bg-black/20 p-5"><h3 className="font-bold">Publicar promoção ou novidade</h3>{field(announcement.title, (value) => setAnnouncement({ ...announcement, title: value }), 'Título')}<textarea className="admin-input min-h-28" required placeholder="Texto da publicação" value={announcement.body} onChange={(event) => setAnnouncement({ ...announcement, body: event.target.value })} />{field(announcement.image_url, (value) => setAnnouncement({ ...announcement, image_url: value }), 'Link da imagem')}<select className="admin-input" value={announcement.kind} onChange={(event) => setAnnouncement({ ...announcement, kind: event.target.value })}><option value="novidade">Novidade</option><option value="promocao">Promoção</option></select><button className="admin-primary">Publicar</button></form><div className="grid gap-3">{announcements.map((item) => <article key={item.id} className="rounded-xl border border-white/10 p-4"><strong>{item.title}</strong><p className="text-sm text-white/60">{item.body}</p></article>)}</div></div>}
+  {active === 'Pagamentos' && <form onSubmit={savePayments} className="mt-6 grid gap-4 rounded-xl border border-white/10 bg-black/20 p-5"><h3 className="font-bold">Formas de pagamento e juros</h3>{(['pix_enabled', 'credit_enabled', 'debit_enabled', 'whatsapp_enabled'] as const).map((key) => <label key={key} className="flex items-center gap-3"><input type="checkbox" checked={payments[key]} onChange={(event) => setPayments({ ...payments, [key]: event.target.checked })} />{key === 'pix_enabled' ? 'Pix' : key === 'credit_enabled' ? 'Cartão de crédito' : key === 'debit_enabled' ? 'Cartão de débito' : 'Pagamento pelo WhatsApp'}</label>)}{field(payments.card_interest, (value) => setPayments({ ...payments, card_interest: Number(value) }), 'Juros do cartão (%)', 'number')}{field(payments.max_installments, (value) => setPayments({ ...payments, max_installments: Number(value) }), 'Máximo de parcelas', 'number')}<button className="admin-primary">Salvar pagamentos</button></form>}
+  {active === 'Aparência e textos' && <form onSubmit={saveSettings} className="mt-6 grid gap-3 rounded-xl border border-white/10 bg-black/20 p-5">{field(settings.store_name, (value) => setSettings({ ...settings, store_name: value }), 'Nome da loja')}{field(settings.whatsapp, (value) => setSettings({ ...settings, whatsapp: value }), 'WhatsApp')}{field(settings.logo_url, (value) => setSettings({ ...settings, logo_url: value }), 'Link da foto/logo')}{field(settings.hero_title, (value) => setSettings({ ...settings, hero_title: value }), 'Título principal')}<textarea className="admin-input min-h-28" placeholder="Texto principal da loja" value={settings.hero_text} onChange={(event) => setSettings({ ...settings, hero_text: event.target.value })} /><button className="admin-primary">Salvar aparência</button></form>}
+  {message && <p role="status" aria-live="polite" className={`mt-4 rounded-lg border p-3 text-sm ${message.includes('Erro') || message.includes('Não') ? 'border-red-400/30 text-red-200' : 'border-fuchsia-400/20 text-fuchsia-200'}`}>{message}</p>}</section></div></main>
 }
