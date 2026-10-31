@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { ArrowRight, ChevronRight, CreditCard, Menu, MessageCircle, Play, Search, ShieldCheck, Sparkles, WalletCards, X, Zap } from 'lucide-react'
 
 const whatsapp = '5531982941291'
-const categories = ['Todas', 'Diamantes', 'Contas', 'Skins', 'Gift Cards']
+const categories = ['Todas']
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false)
