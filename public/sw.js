@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lupita-shopee-v1'
+const CACHE_NAME = 'lupita-shopee-v2'
 const APP_SHELL = ['/', '/icon.svg', '/apple-icon.png']
 
 self.addEventListener('install', (event) => {
@@ -7,10 +7,21 @@ self.addEventListener('install', (event) => {
 })
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim())
+  event.waitUntil(
+    caches
+      .keys()
+      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
+      .then(() => self.clients.claim()),
+  )
 })
 
+// Only page navigations get an offline fallback. Streaming RSC payloads, API calls,
+// Next.js assets and cross-origin requests go straight to the network so the SW never
+// holds (and aborts) a streamed response the server is still writing.
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return
-  event.respondWith(fetch(event.request).catch(() => caches.match(event.request)))
+  const { request } = event
+  if (request.method !== 'GET' || request.mode !== 'navigate') return
+  const url = new URL(request.url)
+  if (url.origin !== self.location.origin || url.pathname.startsWith('/admin') || url.pathname.startsWith('/api')) return
+  event.respondWith(fetch(request).catch(() => caches.match('/')))
 })
