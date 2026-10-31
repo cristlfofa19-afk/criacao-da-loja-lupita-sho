@@ -28,7 +28,8 @@ export async function POST(request: Request) {
   const table = body.table as string
   if (!validTable(table)) return NextResponse.json({ error: "Tabela inválida" }, { status: 400 })
   delete body.table
-  const response = await fetch(`${baseUrl}/rest/v1/${table}`, { method: "POST", headers: headersFor(true), body: JSON.stringify(body) })
+  const singleton = table === "store_settings" || table === "store_payment_settings"
+  const response = await fetch(`${baseUrl}/rest/v1/${table}${singleton ? "?on_conflict=id" : ""}`, { method: "POST", headers: { ...headersFor(true), ...(singleton ? { Prefer: "resolution=merge-duplicates,return=representation" } : {}) }, body: JSON.stringify(body) })
   const data = await response.json()
   return NextResponse.json(Array.isArray(data) ? data[0] : data, { status: response.status })
 }
