@@ -18,7 +18,7 @@ export default function Page() {
   }
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#09070b] text-white">
+    <main className="min-h-screen overflow-hidden bg-[#09070b] text-white selection:bg-pink-400/40">
       <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_75%_10%,rgba(236,72,153,.14),transparent_28%),radial-gradient(circle_at_10%_80%,rgba(168,85,247,.08),transparent_25%)]" />
       <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-5 py-5 lg:px-10">
         <a href="#inicio" className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-xl bg-pink-500 font-black shadow-[0_0_25px_rgba(236,72,153,.7)]">L</span><span className="text-lg font-black tracking-[.22em]">LUPITA <b className="text-pink-400">SHOPEE</b></span></a>
