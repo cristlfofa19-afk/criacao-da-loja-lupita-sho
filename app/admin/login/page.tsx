@@ -33,7 +33,7 @@ export default function AdminLoginPage() {
         setLoading(false)
         return
       }
-      router.replace("/admin")
+      window.location.replace("/admin")
     } catch {
       setError("Não foi possível conectar ao acesso agora. Tente novamente em instantes.")
       setLoading(false)
