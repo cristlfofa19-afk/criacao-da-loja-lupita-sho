@@ -7,8 +7,9 @@ const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 async function requireAdmin() {
   const session = await auth.api.getSession({ headers: await headers() })
-  if (!session?.user) return false
-  return true
+  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase()
+  const sessionEmail = session?.user?.email?.trim().toLowerCase()
+  return Boolean(session?.user && adminEmail && sessionEmail === adminEmail)
 }
 
 export async function GET() {
