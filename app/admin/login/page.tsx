@@ -28,11 +28,14 @@ export default function AdminLoginPage() {
         body: JSON.stringify({ email, password }),
       })
       const result = await response.json().catch(() => ({}))
-      if (!response.ok) setError(result.error || "E-mail ou senha inválidos.")
-      else { router.replace("/admin"); router.refresh() }
+      if (!response.ok) {
+        setError(result.error || "E-mail ou senha inválidos.")
+        setLoading(false)
+        return
+      }
+      router.replace("/admin")
     } catch {
       setError("Não foi possível conectar ao acesso agora. Tente novamente em instantes.")
-    } finally {
       setLoading(false)
     }
   }
