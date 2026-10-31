@@ -8,7 +8,7 @@ import { authClient } from "@/lib/auth-client"
 export default function AdminSetupPage() {
   const router = useRouter()
   const [name, setName] = useState("Lupita")
-  const [email, setEmail] = useState("")
+  const [email, setEmail] = useState("admin@lupita.com")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
